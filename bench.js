@@ -1,26 +1,25 @@
 'use strict';
 
-const Bench = require('bench');
-const Metaphor = require('.');
-const Wreck = require('wreck');
+var Bench = require('bench');
+var Metaphor = require('.');
+var Wreck = require('wreck');
 
-
-const parse = function (document) {
+var parse = function parse(document) {
 
     // Grab the head
 
-    const head = document.match(/<head[^>]*>([\s\S]*)<\/head\s*>/);
+    var head = document.match(/<head[^>]*>([\s\S]*)<\/head\s*>/);
     if (!head) {
         return [];
     }
 
     // Remove scripts
 
-    const scripts = head[1].split('</script>');         //     '<script>a</script>something<script>a</script>' -> ['<script>a', 'something<script>a', '']
-    const chunks = [];
-    scripts.forEach((chunk) => {
+    var scripts = head[1].split('</script>'); //     '<script>a</script>something<script>a</script>' -> ['<script>a', 'something<script>a', '']
+    var chunks = [];
+    scripts.forEach(function (chunk) {
 
-        const pos = chunk.indexOf('<script');
+        var pos = chunk.indexOf('<script');
         if (pos !== -1) {
             chunk = chunk.slice(0, pos);
         }
@@ -30,19 +29,19 @@ const parse = function (document) {
 
     // Find meta tags
 
-    const elements = [];
-    chunks.forEach((chunk) => {
+    var elements = [];
+    chunks.forEach(function (chunk) {
 
-        const parts = chunk.split('<meta ');
-        for (let i = 1; i < parts.length; ++i) {
+        var parts = chunk.split('<meta ');
+        for (var i = 1; i < parts.length; ++i) {
             elements.push(parts[i].slice(0, parts[i].indexOf('>')));
         }
     });
 
-    const tags = [];
-    for (let i = 0; i < elements.length; ++i) {
-        const element = elements[i];
-        const parsed = element.match(/\s*property\s*=\s*"og:([^":]*)(?:\:([^"]*))?"\s+content\s*=\s*"([^"]*)\s*"/);
+    var tags = [];
+    for (var i = 0; i < elements.length; ++i) {
+        var element = elements[i];
+        var parsed = element.match(/\s*property\s*=\s*"og:([^":]*)(?:\:([^"]*))?"\s+content\s*=\s*"([^"]*)\s*"/);
         if (parsed) {
             tags.push({ key: parsed[1], sub: parsed[2], value: parsed[3] });
         }
@@ -51,29 +50,28 @@ const parse = function (document) {
     return tags;
 };
 
-
-let document;
+var document = void 0;
 
 exports.compare = {
-    metaphor: function (done) {
+    metaphor: function metaphor(done) {
 
         Metaphor.parse(document, done);
     },
-    custom: function (done) {
+    custom: function custom(done) {
 
         parse(document);
         return done();
     }
 };
 
-
-Wreck.get('https://twitter.com/dalmaer/status/726624422237364226', {}, (ignoreErr1, res, payload) => {
+Wreck.get('https://twitter.com/dalmaer/status/726624422237364226', {}, function (ignoreErr1, res, payload) {
 
     document = payload.toString();
     console.log(Metaphor.parse(document));
-    parse(document, (ignoreErr2, tags) => {
+    parse(document, function (ignoreErr2, tags) {
 
         console.log(tags);
         Bench.runMain();
     });
 });
+
